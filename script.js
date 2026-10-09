@@ -1,3 +1,41 @@
+// Helper Capture Frame dari Video ke Slot Preview (Memperbaiki HP Miring/Gepeng)
+function captureToSlot(slotIndex) {
+  const canvas = document.createElement('canvas');
+  const vWidth = webcamElement.videoWidth || 640;
+  const vHeight = webcamElement.videoHeight || 480;
+
+  // Cek apakah orientasi kamera dalam keadaan tegak/portrait (biasanya di HP)
+  const isPortrait = vHeight > vWidth;
+
+  if (isPortrait) {
+    canvas.width = vHeight;
+    canvas.height = vWidth;
+  } else {
+    canvas.width = vWidth;
+    canvas.height = vHeight;
+  }
+
+  const ctx = canvas.getContext('2d');
+  ctx.filter = webcamElement.style.filter || 'none';
+
+  if (isPortrait) {
+    // Putar 90 derajat jika dari kamera HP portrait
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate((90 * Math.PI) / 180);
+    ctx.drawImage(webcamElement, -vWidth / 2, -vHeight / 2, vWidth, vHeight);
+  } else {
+    ctx.drawImage(webcamElement, 0, 0, canvas.width, canvas.height);
+  }
+
+  const dataUrl = canvas.toDataURL('image/png');
+  capturedPhotos.push(dataUrl);
+
+  // Render ke slot HTML
+  const slot = document.getElementById(`slot-${slotIndex}`);
+  slot.innerHTML = `<img src="${dataUrl}" style="filter: ${webcamElement.style.filter};" />`;
+}
+
+// Render Seluruh Strip ke Satu Canvas & Download
 downloadBtn.addEventListener('click', () => {
   if (capturedPhotos.length < totalPhotos) return;
 
@@ -5,7 +43,7 @@ downloadBtn.addEventListener('click', () => {
   const stripHeight = 1600; 
   const padding = 30;
   const photoWidth = stripWidth - (padding * 2);
-  const photoHeight = photoWidth * (3 / 4); // Rasio target 4:3
+  const photoHeight = photoWidth * (3 / 4); // Rasio 4:3
 
   hiddenCanvas.width = stripWidth;
   hiddenCanvas.height = stripHeight;
@@ -23,7 +61,7 @@ downloadBtn.addEventListener('click', () => {
     img.onload = () => {
       const yPos = padding + index * (photoHeight + padding);
 
-      // Hitung Crop Agar Foto Tidak Gepeng (Aspect Ratio Cover)
+      // Hitung Crop Center (Aspect Ratio Cover)
       const imgAspect = img.width / img.height;
       const targetAspect = photoWidth / photoHeight;
       let sx, sy, sWidth, sHeight;
@@ -45,7 +83,6 @@ downloadBtn.addEventListener('click', () => {
       ctx.translate(padding + photoWidth, yPos);
       ctx.scale(-1, 1);
 
-      // Gambar foto dengan hasil potongan tengah yang pas
       ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, photoWidth, photoHeight);
       ctx.restore();
 
@@ -58,6 +95,7 @@ downloadBtn.addEventListener('click', () => {
         ctx.textAlign = 'center';
         ctx.fillText(`PHOTOBOOTH • ${currentDateSpan.textContent}`, stripWidth / 2, stripHeight - 50);
 
+        const frameSelect = document.getElementById('frame-select');
         const selectedFrame = frameSelect ? frameSelect.value : '';
 
         if (selectedFrame) {
