@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aesthetic Web Photobooth 📸</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>📸 My Mini Photobooth</h1>
+      <p>Ambil 3 foto ala photo strip aesthetic!</p>
+    </header>
+
+    <main class="photobooth-area">
+      <!-- Sisi Kiri: Live Camera & Controls -->
+      <section class="camera-section">
+        <div class="video-wrapper">
+          <video id="webcam" autoplay playsinline></video>
+          <div id="countdown-overlay" class="hidden">3</div>
+        </div>
+
+        <div class="controls">
+          <div class="filter-controls">
+            <label for="filter-select">Pilih Filter:</label>
+            <select id="filter-select">
+              <option value="none">Normal</option>
+              <option value="grayscale(100%)">B&W (Hitam Putih)</option>
+              <option value="sepia(80%)">Sepia / Vintage</option>
+              <option value="contrast(125%) brightness(110%)">Bright & Pop</option>
+              <option value="brightness(110%) saturate(130%) sepia(20%)">Warm Aesthetic</option>
+              <option value="blur(0.5px) brightness(115%) contrast(90%)">Soft Glow</option>
+            </select>
+          </div>
+
+          <button id="start-btn" class="btn primary-btn">✨ Start Photo Session (3 Photos)</button>
+        </div>
+      </section>
+
+      <!-- Sisi Kanan: Live Preview Photo Strip -->
+      <section class="preview-section">
+        <h3>Hasil Photo Strip</h3>
+        
+        <div id="photostrip" class="photostrip-frame">
+          <div class="photo-slot" id="slot-1"><span>Foto 1</span></div>
+          <div class="photo-slot" id="slot-2"><span>Foto 2</span></div>
+          <div class="photo-slot" id="slot-3"><span>Foto 3</span></div>
+          
+          <div class="strip-footer">
+            <p class="brand-text">PHOTOBOOTH • <span id="current-date"></span></p>
+          </div>
+        </div>
+
+        <button id="download-btn" class="btn success-btn" disabled>📥 Download Photo Strip</button>
+      </section>
+    </main>
+  </div>
+
+  <!-- Hidden Canvas untuk proses rendering & gabung foto -->
+  <canvas id="hidden-canvas" style="display: none;"></canvas>
+
+  <script src="script.js"></script>
+</body>
+</html>
