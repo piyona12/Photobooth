@@ -254,3 +254,16 @@ select {
   color: #800020;
   font-weight: 700;
 }
+/* --- Tambahan untuk Slots Grid Layout --- */
+.slots-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.photostrip-frame.layout-2x2 .slots-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2x2 grid */
+  gap: 8px;
+}
