@@ -1,19 +1,54 @@
 // Elemen HTML
 const webcamElement = document.getElementById('webcam');
 const filterSelect = document.getElementById('filter-select');
+const layoutSelect = document.getElementById('layout-select');
 const startBtn = document.getElementById('start-btn');
 const downloadBtn = document.getElementById('download-btn');
 const countdownOverlay = document.getElementById('countdown-overlay');
 const currentDateSpan = document.getElementById('current-date');
 const hiddenCanvas = document.getElementById('hidden-canvas');
+const slotsContainer = document.getElementById('slots-container');
+const photostripFrame = document.getElementById('photostrip');
 
 // Data variabel
-const capturedPhotos = [];
-const totalPhotos = 3;
+let capturedPhotos = [];
+let currentLayout = '3-vert';
+
+// Konfigurasi Layout
+const LAYOUT_CONFIGS = {
+  '1-single': { totalPhotos: 1, cols: 1 },
+  '2-vert':   { totalPhotos: 2, cols: 1 },
+  '3-vert':   { totalPhotos: 3, cols: 1 },
+  '4-vert':   { totalPhotos: 4, cols: 1 },
+  '2x2':      { totalPhotos: 4, cols: 2 }
+};
 
 // 1. Tampilkan Tanggal Hari Ini di Strip Footer
 const today = new Date();
 currentDateSpan.textContent = today.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+// Render Slot Foto di UI berdasarkan Layout yang dipilih
+function renderSlots() {
+  currentLayout = layoutSelect.value;
+  const config = LAYOUT_CONFIGS[currentLayout];
+  
+  photostripFrame.className = `photostrip-frame layout-${currentLayout}`;
+  slotsContainer.innerHTML = '';
+  capturedPhotos = [];
+  downloadBtn.disabled = true;
+
+  for (let i = 1; i <= config.totalPhotos; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'photo-slot';
+    slot.id = `slot-${i}`;
+    slot.innerHTML = `<span>Foto ${i}</span>`;
+    slotsContainer.appendChild(slot);
+  }
+}
+
+// Inisialisasi awal
+renderSlots();
+layoutSelect.addEventListener('change', renderSlots);
 
 // 2. Akses Kamera Webcam
 async function initWebcam() {
@@ -36,25 +71,28 @@ filterSelect.addEventListener('change', (e) => {
 
 // 4. Jalankan Sesi Foto
 startBtn.addEventListener('click', async () => {
+  const config = LAYOUT_CONFIGS[currentLayout];
   startBtn.disabled = true;
   downloadBtn.disabled = true;
+  layoutSelect.disabled = true;
   capturedPhotos.length = 0; // Reset array foto
 
   // Clear slot foto
-  for (let i = 1; i <= totalPhotos; i++) {
+  for (let i = 1; i <= config.totalPhotos; i++) {
     const slot = document.getElementById(`slot-${i}`);
     slot.innerHTML = `<span>Foto ${i}</span>`;
   }
 
   // Ambil foto berturut-turut
-  for (let i = 1; i <= totalPhotos; i++) {
+  for (let i = 1; i <= config.totalPhotos; i++) {
     await runCountdown(3);
     captureToSlot(i);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 800));
   }
 
   startBtn.disabled = false;
   downloadBtn.disabled = false;
+  layoutSelect.disabled = false;
 });
 
 // Helper Countdown
@@ -98,15 +136,22 @@ function captureToSlot(slotIndex) {
   slot.innerHTML = `<img src="${dataUrl}" />`;
 }
 
-// 5. Render Seluruh Strip ke Canvas & Download (Bebas Gepeng!)
+// 5. Render Seluruh Strip ke Canvas & Download (Dinamis sesuai layout)
 downloadBtn.addEventListener('click', () => {
-  if (capturedPhotos.length < totalPhotos) return;
+  const config = LAYOUT_CONFIGS[currentLayout];
+  if (capturedPhotos.length < config.totalPhotos) return;
+
+  const cols = config.cols;
+  const rows = Math.ceil(config.totalPhotos / cols);
 
   const stripWidth = 600;  
-  const stripHeight = 1600; 
   const padding = 35;
-  const photoWidth = stripWidth - (padding * 2);
+  const gap = 20;
+  const photoWidth = (stripWidth - (padding * 2) - (gap * (cols - 1))) / cols;
   const photoHeight = photoWidth * (3 / 4); // Rasio 4:3
+
+  const footerHeight = 80;
+  const stripHeight = (padding * 2) + (rows * photoHeight) + ((rows - 1) * gap) + footerHeight;
 
   hiddenCanvas.width = stripWidth;
   hiddenCanvas.height = stripHeight;
@@ -122,7 +167,11 @@ downloadBtn.addEventListener('click', () => {
     const img = new Image();
     img.src = photoSrc;
     img.onload = () => {
-      const yPos = padding + index * (photoHeight + padding);
+      const col = index % cols;
+      const row = Math.floor(index / cols);
+
+      const xPos = padding + col * (photoWidth + gap);
+      const yPos = padding + row * (photoHeight + gap);
 
       // Hitung Crop Center (Aspect Ratio Cover) agar foto tidak gepeng
       const imgAspect = img.width / img.height;
@@ -142,22 +191,21 @@ downloadBtn.addEventListener('click', () => {
       }
 
       ctx.save();
-      // Gambar foto dengan potong tengah yang pas
-      ctx.drawImage(img, sx, sy, sWidth, sHeight, padding, yPos, photoWidth, photoHeight);
+      ctx.drawImage(img, sx, sy, sWidth, sHeight, xPos, yPos, photoWidth, photoHeight);
       ctx.restore();
 
       loadedImages++;
 
-      if (loadedImages === totalPhotos) {
+      if (loadedImages === config.totalPhotos) {
         // Tulis Teks Footer Maroon
         ctx.fillStyle = '#800020';
         ctx.font = 'bold 24px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`PHOTOBOOTH • ${currentDateSpan.textContent}`, stripWidth / 2, stripHeight - 60);
+        ctx.fillText(`PHOTOBOOTH • ${currentDateSpan.textContent}`, stripWidth / 2, stripHeight - 35);
 
         // Langsung Download
         const link = document.createElement('a');
-        link.download = `photostrip-${Date.now()}.png`;
+        link.download = `photostrip-${currentLayout}-${Date.now()}.png`;
         link.href = hiddenCanvas.toDataURL('image/png');
         link.click();
       }
