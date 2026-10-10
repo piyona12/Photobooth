@@ -11,7 +11,7 @@
   <div class="container">
     <header>
       <h1>📸 My Mini Photobooth</h1>
-      <p>Ambil 3 foto ala photo strip aesthetic!</p>
+      <p>Pilih layout dan abadikan momen aestheticmu!</p>
     </header>
 
     <main class="photobooth-area">
@@ -23,6 +23,18 @@
         </div>
 
         <div class="controls">
+          <!-- Pilihan Layout Baru -->
+          <div class="filter-controls">
+            <label for="layout-select">Pilih Layout:</label>
+            <select id="layout-select">
+              <option value="3-vert">3 Foto (Vertical)</option>
+              <option value="4-vert">4 Foto (Vertical)</option>
+              <option value="2x2">4 Foto (Grid 2x2)</option>
+              <option value="2-vert">2 Foto (Vertical)</option>
+              <option value="1-single">1 Foto (Single)</option>
+            </select>
+          </div>
+
           <div class="filter-controls">
             <label for="filter-select">Pilih Filter:</label>
             <select id="filter-select">
@@ -35,7 +47,7 @@
             </select>
           </div>
 
-          <button id="start-btn" class="btn primary-btn">✨ Start Photo Session (3 Photos)</button>
+          <button id="start-btn" class="btn primary-btn">✨ Start Photo Session</button>
         </div>
       </section>
 
@@ -43,10 +55,11 @@
       <section class="preview-section">
         <h3>Hasil Photo Strip</h3>
         
-        <div id="photostrip" class="photostrip-frame">
-          <div class="photo-slot" id="slot-1"><span>Foto 1</span></div>
-          <div class="photo-slot" id="slot-2"><span>Foto 2</span></div>
-          <div class="photo-slot" id="slot-3"><span>Foto 3</span></div>
+        <!-- ID photostrip tetap sama dengan aslimu -->
+        <div id="photostrip" class="photostrip-frame layout-3-vert">
+          <div id="slots-container" class="slots-container">
+            <!-- Slot akan di-generate dinamis oleh JS -->
+          </div>
           
           <div class="strip-footer">
             <p class="brand-text">PHOTOBOOTH • <span id="current-date"></span></p>
